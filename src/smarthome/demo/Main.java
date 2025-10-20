@@ -8,23 +8,43 @@ import smarthome.cli.SmartHomeCLI;
 
 public class Main {
     public static void main(String[] args) {
+
+        // создаём фабрику (можно поменять на LuxuryHomeFactory)
         SmartHomeFactory factory = new EcoHomeFactory();
+
 
         Light light = factory.createLight();
         MusicSystem music = factory.createMusicSystem();
         Thermostat thermostat = factory.createThermostat();
         SecurityCamera camera = factory.createSecurityCamera();
 
-        Device smartLight = new VoiceControlDecorator(light);
-        Device smartMusic = new RemoteAccessDecorator(music);
+
+        VoiceControlDecorator smartLight = new VoiceControlDecorator(light);
+        RemoteAccessDecorator smartMusic = new RemoteAccessDecorator(music);
+
+
         HomeAutomationFacade home = new HomeAutomationFacade(light, music, thermostat, camera);
 
+
+        System.out.println("\n=== DEMO START ===");
         home.startPartyMode();
         home.activateNightMode();
         home.leaveHome();
-        ((VoiceControlDecorator) smartLight).voiceCommand("Turn on the light");
-        ((RemoteAccessDecorator) smartMusic).remoteControl("Play favorite playlist");
 
+
+        System.out.println("\n--- Testing Decorators ---");
+        smartLight.voiceCommand("Turn on light");
+        smartLight.operate();
+
+        smartMusic.remoteControl("Play music");
+        smartMusic.operate();
+
+
+        System.out.println("\n--- Checking system status ---");
+        home.systemStatus();
+
+
+        System.out.println("\n=== Switching to Interactive Mode ===\n");
         SmartHomeCLI cli = new SmartHomeCLI();
         cli.start();
     }

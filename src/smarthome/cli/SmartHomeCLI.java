@@ -13,76 +13,80 @@ public class SmartHomeCLI {
     private MusicSystem music;
     private Thermostat thermostat;
     private SecurityCamera camera;
+
+    private VoiceControlDecorator smartLight;
+    private RemoteAccessDecorator smartMusic;
+
     private HomeAutomationFacade home;
     private SmartHomeFactory factory;
     private Scanner sc = new Scanner(System.in);
 
     public void start() {
-        System.out.println("Welcome to Smart Home System!");
-        System.out.println("------------------------------");
+        System.out.println("Welcome to SmartHome CLI!");
         selectHomeType();
-        showMenu();
+        mainMenu();
     }
 
-    // выбор типа дома
     private void selectHomeType() {
-        System.out.println("Select home type:");
+        System.out.println("\nChoose home type:");
         System.out.println("1 - Eco Home");
         System.out.println("2 - Luxury Home");
         System.out.print("Your choice: ");
+
         int type = sc.nextInt();
+        sc.nextLine();
 
         if (type == 1) {
             factory = new EcoHomeFactory();
-            System.out.println("Eco Home mode selected.");
+            System.out.println("Eco mode selected.");
         } else {
             factory = new LuxuryHomeFactory();
-            System.out.println("Luxury Home mode selected.");
+            System.out.println("Luxury mode selected.");
         }
 
-        // создаем девайсы
         light = factory.createLight();
         music = factory.createMusicSystem();
         thermostat = factory.createThermostat();
         camera = factory.createSecurityCamera();
 
-        // добавляем немного "умных" фич
-        Device smartLight = new VoiceControlDecorator(light);
-        Device smartMusic = new RemoteAccessDecorator(music);
+        smartLight = new VoiceControlDecorator(light);
+        smartMusic = new RemoteAccessDecorator(music);
 
         home = new HomeAutomationFacade(light, music, thermostat, camera);
-
-        // просто тестируем декораторы
-        ((VoiceControlDecorator) smartLight).voiceCommand("Turn on light");
-        ((RemoteAccessDecorator) smartMusic).remoteControl("Play music");
+        System.out.println("Devices created.\n");
     }
 
-    // главное меню
-    private void showMenu() {
+    private void mainMenu() {
         int choice = -1;
 
         while (choice != 0) {
-            System.out.println("\n========== SMART HOME MENU ==========");
-            System.out.println("1. Turn ON light");
-            System.out.println("2. Turn OFF light");
-            System.out.println("3. Play music");
-            System.out.println("4. Stop music");
-            System.out.println("5. Set temperature");
-            System.out.println("6. Arm camera");
-            System.out.println("7. Disarm camera");
-            System.out.println("8. Show system status");
-            System.out.println("9. Party mode");
-            System.out.println("10. Night mode");
-            System.out.println("11. Leave home");
-            System.out.println("12. Change home type");
-            System.out.println("0. Exit");
-            System.out.print("Enter: ");
+            System.out.println("""
+                    
+                    ======== SMART HOME MENU ========
+                    1. Turn ON light
+                    2. Turn OFF light
+                    3. Play music
+                    4. Stop music
+                    5. Set temperature
+                    6. Arm camera
+                    7. Disarm camera
+                    8. Show system status
+                    9. Party mode
+                    10. Night mode
+                    11. Leave home
+                    12. Change home type
+                    13. Voice / Remote Command
+                    0. Exit
+                    =================================
+                    """);
 
+            System.out.print("Enter: ");
             while (!sc.hasNextInt()) {
                 System.out.print("Enter a number: ");
                 sc.next();
             }
             choice = sc.nextInt();
+            sc.nextLine();
 
             switch (choice) {
                 case 1 -> light.on();
@@ -90,7 +94,7 @@ public class SmartHomeCLI {
                 case 3 -> music.play();
                 case 4 -> music.stop();
                 case 5 -> {
-                    System.out.print("Set temperature °C: ");
+                    System.out.print("Temperature °C: ");
                     int t = sc.nextInt();
                     thermostat.setTemperature(t);
                 }
@@ -104,9 +108,32 @@ public class SmartHomeCLI {
                     System.out.println("Switching home type...");
                     selectHomeType();
                 }
-                case 0 -> System.out.println("Exiting...");
-                default -> System.out.println("Wrong input, try again.");
+                case 13 -> handleSmartCommand();
+                case 0 -> System.out.println("Goodbye!");
+                default -> System.out.println("Invalid input.");
             }
+        }
+    }
+
+    private void handleSmartCommand() {
+        System.out.println("\nType a command (example: 'voice: turn on light' or 'remote: play music')");
+        System.out.print("Command: ");
+        String input = sc.nextLine().trim().toLowerCase();
+
+        if (input.startsWith("voice:")) {
+            String cmd = input.replace("voice:", "").trim();
+            smartLight.voiceCommand(cmd);
+            if (cmd.contains("on")) light.on();
+            else if (cmd.contains("off")) light.off();
+        }
+        else if (input.startsWith("remote:")) {
+            String cmd = input.replace("remote:", "").trim();
+            smartMusic.remoteControl(cmd);
+            if (cmd.contains("play")) music.play();
+            else if (cmd.contains("stop")) music.stop();
+        }
+        else {
+            System.out.println("Unknown command format. Use 'voice:' or 'remote:'");
         }
     }
 }
