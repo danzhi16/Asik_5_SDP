@@ -38,4 +38,12 @@ public class HomeAutomationFacade {
         thermostat.setTemperature(18);
         camera.on();
     }
+    public void systemStatus() {
+        System.out.println("\n--- SYSTEM STATUS ---");
+        light.operate();
+        music.operate();
+        thermostat.operate();
+        camera.operate();
+        System.out.println("----------------------");
+    }
 }
